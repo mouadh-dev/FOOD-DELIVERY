@@ -1,0 +1,46 @@
+# Fichiers et dossiers à ignorer lors du build Docker
+
+# Dependencies - IMPORTANT: Ne pas copier node_modules depuis l'hôte
+node_modules
+npm-debug.log*
+package-lock.json
+
+# Build outputs
+dist
+build
+
+# Environment files
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Git
+.git
+.gitignore
+
+# Docker
+Dockerfile
+Dockerfile.dev
+.dockerignore
+
+# Documentation
+README.md
+*.md
+
+# Logs
+logs
+*.log
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage
+
+# OS files
+.DS_Store
+Thumbs.db

@@ -1,0 +1,23 @@
+# Dockerfile pour le développement
+FROM node:18-alpine
+
+# Définir le répertoire de travail
+WORKDIR /app
+
+# Copier les fichiers package.json
+COPY package*.json ./
+
+# Installer les dépendances (y compris devDependencies)
+RUN npm install
+
+# Copier le code source
+COPY . .
+
+# Exposer le port
+EXPOSE 4000
+
+# Volume pour le hot reload
+VOLUME ["/app"]
+
+# Commande pour démarrer en mode développement
+CMD ["npm", "run", "server"]
