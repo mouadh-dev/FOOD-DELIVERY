@@ -12,6 +12,17 @@ dist/
 .env.development.local
 .env.test.local
 .env.production.local
+.env.docker
+backend/.env
+frontend/.env
+admin/.env
+
+# Keep example files but ignore actual config files
+!.env.example
+!.env.docker.example
+!backend/.env.example
+!frontend/.env.example
+!admin/.env.example
 
 # Logs
 npm-debug.log*
@@ -33,3 +44,33 @@ yarn.lock
 # Temporary files
 *.tmp
 *.temp
+
+# Docker
+docker-compose.override.yml
+.dockerignore
+
+# Database uploads and data
+backend/uploads/
+uploads/
+
+# MongoDB data
+mongodb_data/
+
+# Scripts sensibles
+*.key
+*.pem
+*.p12
+*.crt
+
+# Cache
+.cache/
+.npm/
+.yarn/
+
+# Coverage reports
+coverage/
+
+# Runtime
+*.pid
+*.seed
+*.pid.lock
