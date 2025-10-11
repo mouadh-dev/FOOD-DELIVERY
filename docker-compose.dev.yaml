@@ -1,0 +1,66 @@
+# Docker Compose pour le développement
+# Ce fichier étend le docker-compose.yaml de base
+version: '3.8'
+
+services:
+  # Backend en mode développement avec hot reload
+  backend:
+    # Utiliser le Dockerfile de développement
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    # Volumes pour le hot reload
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+      - ./backend/uploads:/app/uploads
+    # Variables d'environnement pour le dev
+    environment:
+      NODE_ENV: development
+      DEBUG: "*"
+
+  # Frontend en mode développement
+  frontend:
+    # Construire avec Vite en mode dev
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: development
+    # Volumes pour le hot reload
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    # Variables pour le dev
+    environment:
+      NODE_ENV: development
+      CHOKIDAR_USEPOLLING: true
+
+  # Admin en mode développement
+  admin:
+    build:
+      context: ./admin
+      dockerfile: Dockerfile
+      target: development
+    volumes:
+      - ./admin:/app
+      - /app/node_modules
+    environment:
+      NODE_ENV: development
+      CHOKIDAR_USEPOLLING: true
+
+  # MongoDB avec interface d'administration
+  mongo-express:
+    image: mongo-express:latest
+    container_name: food-delivery-mongo-express
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_SERVER: mongodb
+      ME_CONFIG_MONGODB_PORT: 27017
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: password
+    depends_on:
+      - mongodb
+    networks:
+      - food-delivery-network
