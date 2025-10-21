@@ -2,8 +2,6 @@ services:
   
   mongodb:
     image: mongo:7.0
-    container_name: food-delivery-mongodb
-    restart: unless-stopped
     environment:
       MONGO_INITDB_DATABASE: mydatabase
     ports:
@@ -11,12 +9,15 @@ services:
     volumes:
       - mongodb_data:/data/db
     networks:
-      - food-delivery-network
+      - food-delivery-swarm-network
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
 
   mongo-express:
     image: mongo-express:latest
-    container_name: food-delivery-mongo-express
-    restart: unless-stopped
     ports:
       - "8081:8081"
     environment:
@@ -26,17 +27,11 @@ services:
       ME_CONFIG_BASICAUTH_PASSWORD: password123
       ME_CONFIG_MONGODB_ADMINUSERNAME: ""
       ME_CONFIG_MONGODB_ADMINPASSWORD: ""
-    depends_on:
-      - mongodb
     networks:
-      - food-delivery-network
+      - food-delivery-swarm-network
 
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: food-delivery-backend
-    restart: unless-stopped
+    image: food-delivery-backend
     environment:
       JWT_SECRET: ${JWT_SECRET:-mySecretKey123!@#}
       SALT: ${SALT:-10}
@@ -45,47 +40,35 @@ services:
       PORT: ${BACKEND_PORT:-4000}
     ports:
       - "4000:4000"
-    depends_on:
-      - mongodb
     volumes:
       - ./backend/uploads:/app/uploads
     networks:
-      - food-delivery-network
+      - food-delivery-swarm-network
+    deploy:
+      replicas: 2
 
   frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-      args:
-        - REACT_APP_BACKEND_URL=http://localhost:4000
-    container_name: food-delivery-frontend
-    restart: unless-stopped
+    image: food-delivery-frontend
     ports:
       - "3000:80"
-    depends_on:
-      - backend
     networks:
-      - food-delivery-network
+      - food-delivery-swarm-network
+    deploy:
+      replicas: 2
 
   admin:
-    build:
-      context: ./admin
-      dockerfile: Dockerfile
-      args:
-        - REACT_APP_BACKEND_URL=http://localhost:4000
-    container_name: food-delivery-admin
-    restart: unless-stopped
+    image: food-delivery-admin
     ports:
       - "3001:80"
-    depends_on:
-      - backend
     networks:
-      - food-delivery-network
+      - food-delivery-swarm-network
+    deploy:
+      replicas: 1
 
 networks:
-  food-delivery-network:
-    driver: bridge
-    name: food-delivery-network
+  food-delivery-swarm-network:
+    driver: overlay
+    attachable: true
 
 volumes:
   mongodb_data:
