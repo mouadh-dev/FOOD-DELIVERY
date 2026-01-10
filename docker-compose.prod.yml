@@ -1,0 +1,75 @@
+version: '3.8'
+
+networks:
+  food-delivery-network:
+    driver: bridge
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: food-delivery-mongodb-prod
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_DATABASE: food-delivery-prod
+    volumes:
+      - mongo_data_prod:/data/db
+    networks:
+      - food-delivery-network
+    ports:
+      - "27017:27017"
+
+  backend:
+    image: ${DOCKER_REGISTRY:-localhost}/${IMAGE_NAME:-food-delivery}-backend:${GIT_COMMIT_SHORT:-latest}
+    container_name: food-delivery-backend-prod
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+    environment:
+      NODE_ENV: production
+      MONGO_URL: mongodb://mongodb:27017/food-delivery-prod
+      PORT: 4000
+      JWT_SECRET: ${JWT_SECRET:-production-secret-key-change-me}
+      SALT: ${SALT:-10}
+    depends_on:
+      - mongodb
+    networks:
+      - food-delivery-network
+    volumes:
+      - ./backend/uploads:/app/uploads
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:4000/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  frontend:
+    image: ${DOCKER_REGISTRY:-localhost}/${IMAGE_NAME:-food-delivery}-frontend:${GIT_COMMIT_SHORT:-latest}
+    container_name: food-delivery-frontend-prod
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    environment:
+      NODE_ENV: production
+      VITE_BACKEND_URL: http://localhost:4000
+    depends_on:
+      - backend
+    networks:
+      - food-delivery-network
+
+  admin:
+    image: ${DOCKER_REGISTRY:-localhost}/${IMAGE_NAME:-food-delivery}-admin:${GIT_COMMIT_SHORT:-latest}
+    container_name: food-delivery-admin-prod
+    restart: unless-stopped
+    ports:
+      - "3001:80"
+    environment:
+      NODE_ENV: production
+      VITE_BACKEND_URL: http://localhost:4000
+    depends_on:
+      - backend
+    networks:
+      - food-delivery-network
+
+volumes:
+  mongo_data_prod:
