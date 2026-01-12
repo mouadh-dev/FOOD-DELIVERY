@@ -1,12 +1,6 @@
 pipeline {
     agent any
     
-    environment {
-        DOCKER_REGISTRY = 'localhost'
-        IMAGE_NAME = 'food-delivery'
-        SONAR_HOST = 'http://sonarqube:9000'
-    }
-    
     stages {
         stage('🔍 Checkout') {
             steps {
