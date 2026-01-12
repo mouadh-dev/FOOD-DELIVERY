@@ -1,6 +1,12 @@
 pipeline {
     agent any
     
+    environment {
+        DOCKER_REGISTRY = 'localhost'
+        IMAGE_NAME = 'food-delivery'
+        SONAR_HOST = 'http://sonarqube:9000'
+    }
+    
     stages {
         stage('🔍 Checkout') {
             steps {
@@ -81,7 +87,7 @@ pipeline {
             }
             steps {
                 withCredentials([string(credentialsId: 'sonarqube-token', variable: 'SONAR_TOKEN')]) {
-                    sh """
+                    sh '''
                         echo "Starting SonarQube analysis..."
                         sonar-scanner \
                             -Dsonar.projectKey=food-delivery \
@@ -91,7 +97,7 @@ pipeline {
                             -Dsonar.host.url=${SONAR_HOST} \
                             -Dsonar.token=${SONAR_TOKEN}
                         echo "✅ SonarQube analysis completed"
-                    """
+                    '''
                 }
             }
         }
