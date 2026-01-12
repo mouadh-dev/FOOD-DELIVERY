@@ -110,7 +110,10 @@ pipeline {
                             publishHTML([
                                 reportDir: 'backend/coverage/lcov-report',
                                 reportFiles: 'index.html',
-                                reportName: 'Backend Coverage'
+                                reportName: 'Backend Coverage',
+                                keepAll: true,
+                                alwaysLinkToLastBuild: true,
+                                allowMissing: false
                             ])
                         }
                     }
@@ -183,7 +186,10 @@ pipeline {
                 publishHTML([
                     reportDir: '.',
                     reportFiles: 'zap-report.html',
-                    reportName: 'OWASP ZAP Report'
+                    reportName: 'OWASP ZAP Report',
+                    keepAll: true,
+                    alwaysLinkToLastBuild: true,
+                    allowMissing: false
                 ])
             }
         }
