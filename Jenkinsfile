@@ -161,6 +161,24 @@ pipeline {
                         }
                     }
                 }
+                stage('Admin Audit') {
+                    agent {
+                        docker {
+                            image 'node:18-alpine'
+                            reuseNode true
+                        }
+                    }
+                    steps {
+                        dir('admin') {
+                            sh '''
+                                echo "Auditing admin dependencies..."
+                                npm audit --audit-level=moderate --json > npm-audit-admin.json || true
+                                echo "✅ Admin audit completed"
+                            '''
+                            archiveArtifacts artifacts: 'npm-audit-admin.json', allowEmptyArchive: true
+                        }
+                    }
+                }
             }
         }
         
