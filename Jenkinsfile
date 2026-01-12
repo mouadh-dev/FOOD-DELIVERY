@@ -7,10 +7,7 @@ pipeline {
         SONAR_HOST = 'http://sonarqube:9000'
     }
     
-    tools {
-        nodejs 'NodeJS-18'
-    }
-    
+
     stages {
         stage('🔍 Checkout') {
             steps {
@@ -29,7 +26,15 @@ pipeline {
                 stage('Backend') {
                     steps {
                         dir('backend') {
-                            sh 'npm ci'
+                            sh '''
+                                # Vérifier et installer npm si nécessaire
+                                if ! command -v npm &> /dev/null; then
+                                    echo "Installing Node.js..."
+                                    curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+                                    apt-get install -y nodejs
+                                fi
+                                npm ci
+                            '''
                         }
                     }
                 }
@@ -209,18 +214,11 @@ pipeline {
     }
     
     post {
-        always {
-            cleanWs()
-        }
         success {
-            slackSend channel: '#devops',
-                color: 'good',
-                message: "✅ Pipeline SUCCESS: ${env.JOB_NAME} #${env.BUILD_NUMBER}"
+            echo '✅ Pipeline réussi avec succès!'
         }
         failure {
-            slackSend channel: '#devops',
-                color: 'danger',
-                message: "❌ Pipeline FAILED: ${env.JOB_NAME} #${env.BUILD_NUMBER}"
+            echo '❌ Le pipeline a échoué!'
         }
     }
 }
