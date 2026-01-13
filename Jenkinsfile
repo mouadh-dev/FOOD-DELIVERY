@@ -214,7 +214,83 @@ pipeline {
             }
         }
         
-        stage('🚀 Deploy to Staging') {
+        stage('� Container Security Scan - Trivy') {
+            agent {
+                docker {
+                    image 'aquasec/trivy:latest'
+                    args '--network food-delivery-network -v /var/run/docker.sock:/var/run/docker.sock'
+                    reuseNode true
+                }
+            }
+            steps {
+                script {
+                    echo "=========================================="
+                    echo "🔒 Container Security Scanning with Trivy"
+                    echo "=========================================="
+                    
+                    // Scan Backend Image
+                    sh """
+                        echo "Scanning Backend image..."
+                        trivy image \
+                            --severity HIGH,CRITICAL \
+                            --format json \
+                            --output trivy-backend-report.json \
+                            ${DOCKER_REGISTRY}/${IMAGE_NAME}-backend:${GIT_COMMIT_SHORT} || true
+                        
+                        echo "=========================================="
+                        echo "Backend Image Vulnerabilities:"
+                        trivy image \
+                            --severity HIGH,CRITICAL \
+                            ${DOCKER_REGISTRY}/${IMAGE_NAME}-backend:${GIT_COMMIT_SHORT} || true
+                        echo "=========================================="
+                    """
+                    
+                    // Scan Frontend Image
+                    sh """
+                        echo "Scanning Frontend image..."
+                        trivy image \
+                            --severity HIGH,CRITICAL \
+                            --format json \
+                            --output trivy-frontend-report.json \
+                            ${DOCKER_REGISTRY}/${IMAGE_NAME}-frontend:${GIT_COMMIT_SHORT} || true
+                        
+                        echo "=========================================="
+                        echo "Frontend Image Vulnerabilities:"
+                        trivy image \
+                            --severity HIGH,CRITICAL \
+                            ${DOCKER_REGISTRY}/${IMAGE_NAME}-frontend:${GIT_COMMIT_SHORT} || true
+                        echo "=========================================="
+                    """
+                    
+                    // Scan Admin Image
+                    sh """
+                        echo "Scanning Admin image..."
+                        trivy image \
+                            --severity HIGH,CRITICAL \
+                            --format json \
+                            --output trivy-admin-report.json \
+                            ${DOCKER_REGISTRY}/${IMAGE_NAME}-admin:${GIT_COMMIT_SHORT} || true
+                        
+                        echo "=========================================="
+                        echo "Admin Image Vulnerabilities:"
+                        trivy image \
+                            --severity HIGH,CRITICAL \
+                            ${DOCKER_REGISTRY}/${IMAGE_NAME}-admin:${GIT_COMMIT_SHORT} || true
+                        echo "=========================================="
+                    """
+                    
+                    echo "✅ Container security scan completed"
+                    echo "Reports saved: trivy-*-report.json"
+                }
+            }
+            post {
+                always {
+                    archiveArtifacts artifacts: 'trivy-*-report.json', allowEmptyArchive: true
+                }
+            }
+        }
+        
+        stage('�🚀 Deploy to Staging') {
             when {
                 anyOf {
                     branch 'develop'
