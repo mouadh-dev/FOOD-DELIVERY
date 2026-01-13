@@ -214,14 +214,7 @@ pipeline {
             }
         }
         
-        stage('🔒  Container Security Scan - Trivy') {
-            agent {
-                docker {
-                    image 'aquasec/trivy:latest'
-                    args '--network food-delivery-network -v /var/run/docker.sock:/var/run/docker.sock'
-                    reuseNode true
-                }
-            }
+        stage('🔒 Container Security Scan - Trivy') {
             steps {
                 script {
                     echo "=========================================="
@@ -231,61 +224,67 @@ pipeline {
                     // Scan Backend Image
                     sh """
                         echo "Scanning Backend image..."
-                        trivy image \
+                        docker run --rm \
+                            -v /var/run/docker.sock:/var/run/docker.sock \
+                            aquasec/trivy:latest image \
                             --severity HIGH,CRITICAL \
                             --format json \
-                            --output trivy-backend-report.json \
+                            --output /tmp/trivy-backend-report.json \
                             ${DOCKER_REGISTRY}/${IMAGE_NAME}-backend:${GIT_COMMIT_SHORT} || true
                         
-                        echo "=========================================="
-                        echo "Backend Image Vulnerabilities:"
-                        trivy image \
+                        docker run --rm \
+                            -v /var/run/docker.sock:/var/run/docker.sock \
+                            aquasec/trivy:latest image \
                             --severity HIGH,CRITICAL \
                             ${DOCKER_REGISTRY}/${IMAGE_NAME}-backend:${GIT_COMMIT_SHORT} || true
-                        echo "=========================================="
+                        
+                        echo "✅ Backend scan completed"
                     """
                     
                     // Scan Frontend Image
                     sh """
+                        echo "=========================================="
                         echo "Scanning Frontend image..."
-                        trivy image \
+                        docker run --rm \
+                            -v /var/run/docker.sock:/var/run/docker.sock \
+                            aquasec/trivy:latest image \
                             --severity HIGH,CRITICAL \
                             --format json \
-                            --output trivy-frontend-report.json \
+                            --output /tmp/trivy-frontend-report.json \
                             ${DOCKER_REGISTRY}/${IMAGE_NAME}-frontend:${GIT_COMMIT_SHORT} || true
                         
-                        echo "=========================================="
-                        echo "Frontend Image Vulnerabilities:"
-                        trivy image \
+                        docker run --rm \
+                            -v /var/run/docker.sock:/var/run/docker.sock \
+                            aquasec/trivy:latest image \
                             --severity HIGH,CRITICAL \
                             ${DOCKER_REGISTRY}/${IMAGE_NAME}-frontend:${GIT_COMMIT_SHORT} || true
-                        echo "=========================================="
+                        
+                        echo "✅ Frontend scan completed"
                     """
                     
                     // Scan Admin Image
                     sh """
+                        echo "=========================================="
                         echo "Scanning Admin image..."
-                        trivy image \
+                        docker run --rm \
+                            -v /var/run/docker.sock:/var/run/docker.sock \
+                            aquasec/trivy:latest image \
                             --severity HIGH,CRITICAL \
                             --format json \
-                            --output trivy-admin-report.json \
+                            --output /tmp/trivy-admin-report.json \
                             ${DOCKER_REGISTRY}/${IMAGE_NAME}-admin:${GIT_COMMIT_SHORT} || true
                         
-                        echo "=========================================="
-                        echo "Admin Image Vulnerabilities:"
-                        trivy image \
+                        docker run --rm \
+                            -v /var/run/docker.sock:/var/run/docker.sock \
+                            aquasec/trivy:latest image \
                             --severity HIGH,CRITICAL \
                             ${DOCKER_REGISTRY}/${IMAGE_NAME}-admin:${GIT_COMMIT_SHORT} || true
+                        
+                        echo "✅ Admin scan completed"
                         echo "=========================================="
                     """
                     
                     echo "✅ Container security scan completed"
-                    echo "Reports saved: trivy-*-report.json"
-                }
-            }
-            post {
-                always {
-                    archiveArtifacts artifacts: 'trivy-*-report.json', allowEmptyArchive: true
                 }
             }
         }
