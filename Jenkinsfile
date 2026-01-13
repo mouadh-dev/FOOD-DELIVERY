@@ -214,7 +214,7 @@ pipeline {
             }
         }
         
-        stage('� Container Security Scan - Trivy') {
+        stage('🔒  Container Security Scan - Trivy') {
             agent {
                 docker {
                     image 'aquasec/trivy:latest'
@@ -290,7 +290,7 @@ pipeline {
             }
         }
         
-        stage('�🚀 Deploy to Staging') {
+        stage(�🚀 Deploy to Staging') {
             when {
                 anyOf {
                     branch 'develop'
