@@ -25,7 +25,7 @@ print_error() {
 }
 
 # Arrêter et supprimer les conteneurs
-containers=("food-delivery-backend-container" "food-delivery-frontend-container" "food-delivery-admin-container" "jenkins" "sonarqube")
+containers=("food-delivery-backend-container" "food-delivery-frontend-container" "food-delivery-admin-container")
 
 for container in "${containers[@]}"; do
     if docker ps | grep -q "$container"; then
@@ -44,7 +44,12 @@ for container in "${containers[@]}"; do
     fi
 done
 
-print_success "🎉 Tous les conteneurs ont été arrêtés et supprimés !"
+# Arrêter Jenkins et SonarQube (sans les supprimer)
+print_message "Arrêt de Jenkins et SonarQube..."
+docker stop jenkins sonarqube 2>/dev/null || true
+print_success "Jenkins et SonarQube arrêtés"
+
+print_success "🎉 Tous les conteneurs d'application ont été arrêtés !"
 
 # Afficher les conteneurs restants
 print_message "Conteneurs Docker restants :"

@@ -70,6 +70,19 @@ else
     fi
 fi
 
+# Vérifier et démarrer le monitoring
+print_message "📊 Vérification du monitoring..."
+if docker ps --format '{{.Names}}' | grep -q '^prometheus$'; then
+    print_success "Monitoring déjà en cours d'exécution"
+else
+    if docker ps -a --format '{{.Names}}' | grep -q '^prometheus$'; then
+        print_message "Démarrage du monitoring..."
+        docker-compose -f docker-compose.monitoring.yml start 2>/dev/null || print_warning "Monitoring non configuré"
+    else
+        print_warning "Monitoring non configuré. Exécutez ./start-monitoring.sh"
+    fi
+fi
+
 echo ""
 
 # Étape 1: Construire les images

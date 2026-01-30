@@ -85,7 +85,7 @@ docker rm food-delivery-admin-container 2>/dev/null || true
 
 # Lancer le backend
 print_message "Lancement du backend sur le port 4000..."
-if docker run -d --name food-delivery-backend-container -p 4000:4000 food-delivery-backend; then
+if docker run -d --name food-delivery-backend-container --network food-delivery-network -p 4000:4000 food-delivery-backend; then
     print_success "Backend démarré avec succès"
 else
     print_error "Échec du démarrage du backend"
@@ -97,7 +97,7 @@ sleep 2
 
 # Lancer le frontend
 print_message "Lancement du frontend sur le port 3000..."
-if docker run -d --name food-delivery-frontend-container -p 3000:80 food-delivery-frontend; then
+if docker run -d --name food-delivery-frontend-container --network food-delivery-network -p 3000:80 food-delivery-frontend; then
     print_success "Frontend démarré avec succès"
 else
     print_error "Échec du démarrage du frontend"
@@ -106,7 +106,7 @@ fi
 
 # Lancer l'admin
 print_message "Lancement de l'admin sur le port 3001..."
-if docker run -d --name food-delivery-admin-container -p 3001:80 food-delivery-admin; then
+if docker run -d --name food-delivery-admin-container --network food-delivery-network -p 3001:80 food-delivery-admin; then
     print_success "Admin démarré avec succès"
 else
     print_error "Échec du démarrage de l'admin"
