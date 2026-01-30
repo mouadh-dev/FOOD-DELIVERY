@@ -25,7 +25,7 @@ print_error() {
 }
 
 # Arrêter et supprimer les conteneurs
-containers=("food-delivery-backend-container" "food-delivery-frontend-container" "food-delivery-admin-container")
+containers=("food-delivery-backend-container" "food-delivery-frontend-container" "food-delivery-admin-container" "jenkins" "sonarqube")
 
 for container in "${containers[@]}"; do
     if docker ps | grep -q "$container"; then
