@@ -482,6 +482,7 @@ pipeline {
                         reportFiles: 'zap-backend-report.html',
                         reportName: 'ZAP Backend Security Report',
                         alwaysLinkToLastBuild: true,
+                        keepAll: true,
                         allowMissing: true
                     ])
                     publishHTML([
@@ -489,6 +490,7 @@ pipeline {
                         reportFiles: 'zap-admin-report.html',
                         reportName: 'ZAP Admin Security Report',
                         alwaysLinkToLastBuild: true,
+                        keepAll: true,
                         allowMissing: true
                     ])
                 }
