@@ -42,6 +42,36 @@ fi
 
 print_success "Docker est disponible et en cours d'exécution ✅"
 
+# Vérifier et démarrer SonarQube
+print_message "🔍 Vérification de SonarQube..."
+if docker ps --format '{{.Names}}' | grep -q '^sonarqube$'; then
+    print_success "SonarQube est déjà en cours d'exécution"
+else
+    if docker ps -a --format '{{.Names}}' | grep -q '^sonarqube$'; then
+        print_message "Démarrage de SonarQube existant..."
+        docker start sonarqube
+        print_success "SonarQube démarré"
+    else
+        print_warning "SonarQube n'est pas configuré. Exécutez ./setup-jenkins.sh pour le configurer"
+    fi
+fi
+
+# Vérifier et démarrer Jenkins
+print_message "🔧 Vérification de Jenkins..."
+if docker ps --format '{{.Names}}' | grep -q '^jenkins$'; then
+    print_success "Jenkins est déjà en cours d'exécution"
+else
+    if docker ps -a --format '{{.Names}}' | grep -q '^jenkins$'; then
+        print_message "Démarrage de Jenkins existant..."
+        docker start jenkins
+        print_success "Jenkins démarré"
+    else
+        print_warning "Jenkins n'est pas configuré. Exécutez ./setup-jenkins.sh pour le configurer"
+    fi
+fi
+
+echo ""
+
 # Étape 1: Construire les images
 print_message "🔨 Étape 1: Construction des images..."
 if ./build.sh; then

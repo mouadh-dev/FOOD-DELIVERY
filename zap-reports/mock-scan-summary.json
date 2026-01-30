@@ -1,0 +1,33 @@
+{
+  "summary": {
+    "scanDate": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+    "target": "http://localhost:3000",
+    "totalAlerts": 15,
+    "riskBreakdown": {
+      "high": 2,
+      "medium": 5,
+      "low": 6,
+      "informational": 2
+    }
+  },
+  "commonVulnerabilities": [
+    {
+      "name": "Missing Anti-CSRF Tokens",
+      "risk": "high",
+      "description": "No Anti-CSRF tokens were found in a HTML submission form",
+      "solution": "Implement CSRF tokens for all state-changing operations"
+    },
+    {
+      "name": "Content Security Policy (CSP) Header Not Set",
+      "risk": "medium",
+      "description": "CSP was not found in response headers",
+      "solution": "Add Content-Security-Policy header to prevent XSS attacks"
+    },
+    {
+      "name": "X-Content-Type-Options Header Missing",
+      "risk": "low",
+      "description": "The Anti-MIME-Sniffing header is not set",
+      "solution": "Add X-Content-Type-Options: nosniff header"
+    }
+  ]
+}

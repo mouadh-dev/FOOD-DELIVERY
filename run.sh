@@ -42,6 +42,36 @@ check_image "food-delivery-backend"
 check_image "food-delivery-frontend"
 check_image "food-delivery-admin"
 
+# Vérifier et démarrer SonarQube
+print_message "Vérification de SonarQube..."
+if docker ps --format '{{.Names}}' | grep -q '^sonarqube$'; then
+    print_success "SonarQube est déjà en cours d'exécution"
+else
+    if docker ps -a --format '{{.Names}}' | grep -q '^sonarqube$'; then
+        print_message "Démarrage de SonarQube..."
+        docker start sonarqube
+        print_success "SonarQube démarré"
+    else
+        print_warning "SonarQube n'est pas configuré. Utilisez ./setup-jenkins.sh"
+    fi
+fi
+
+# Vérifier et démarrer Jenkins
+print_message "Vérification de Jenkins..."
+if docker ps --format '{{.Names}}' | grep -q '^jenkins$'; then
+    print_success "Jenkins est déjà en cours d'exécution"
+else
+    if docker ps -a --format '{{.Names}}' | grep -q '^jenkins$'; then
+        print_message "Démarrage de Jenkins..."
+        docker start jenkins
+        print_success "Jenkins démarré"
+    else
+        print_warning "Jenkins n'est pas configuré. Utilisez ./setup-jenkins.sh"
+    fi
+fi
+
+echo ""
+
 # Arrêter les conteneurs existants s'ils tournent
 print_message "Arrêt des conteneurs existants..."
 docker stop food-delivery-backend-container 2>/dev/null || true
@@ -89,6 +119,10 @@ print_message "URLs de l'application :"
 echo "  📱 Frontend: http://localhost:3000"
 echo "  🛠️  Admin:    http://localhost:3001"
 echo "  🔧 Backend:  http://localhost:4000"
+echo ""
+print_message "Services DevOps :"
+echo "  🔐 Jenkins:  http://localhost:8080"
+echo "  📊 SonarQube: http://localhost:9000"
 echo ""
 print_message "Pour voir les logs : ./logs.sh"
 print_message "Pour arrêter : ./stop.sh"

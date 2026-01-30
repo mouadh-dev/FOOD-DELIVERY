@@ -123,6 +123,76 @@ pipeline {
             }
         }
         
+        stage('🧪 Automated Tests') {
+            parallel {
+                stage('Backend Tests') {
+                    agent {
+                        docker {
+                            image 'node:18-alpine'
+                            reuseNode true
+                        }
+                    }
+                    steps {
+                        dir('backend') {
+                            sh '''
+                                echo "Running backend tests..."
+                                npm ci
+                                npm test -- --passWithNoTests --ci
+                                echo "✅ Backend tests completed"
+                            '''
+                        }
+                    }
+                    post {
+                        always {
+                            junit testResults: 'backend/junit.xml', allowEmptyResults: true
+                            publishHTML([
+                                reportDir: 'backend/coverage',
+                                reportFiles: 'index.html',
+                                reportName: 'Backend Coverage Report',
+                                alwaysLinkToLastBuild: true
+                            ])
+                        }
+                    }
+                }
+                stage('Frontend Tests') {
+                    agent {
+                        docker {
+                            image 'node:18-alpine'
+                            reuseNode true
+                        }
+                    }
+                    steps {
+                        dir('frontend') {
+                            sh '''
+                                echo "Running frontend tests..."
+                                npm ci
+                                npm test -- --run
+                                echo "✅ Frontend tests completed"
+                            '''
+                        }
+                    }
+                }
+                stage('Admin Tests') {
+                    agent {
+                        docker {
+                            image 'node:18-alpine'
+                            reuseNode true
+                        }
+                    }
+                    steps {
+                        dir('admin') {
+                            sh '''
+                                echo "Running admin tests..."
+                                npm ci
+                                npm test -- --run
+                                echo "✅ Admin tests completed"
+                            '''
+                        }
+                    }
+                }
+            }
+        }
+        
         stage('🛡️ Dependency Check') {
             parallel {
                 stage('Backend Audit') {
@@ -312,6 +382,112 @@ pipeline {
                         echo "Frontend: http://localhost:3001"
                         echo "Admin: http://localhost:3002"
                     """
+                }
+            }
+        }
+        
+        stage('🔐 DAST - Dynamic Security Testing') {
+            when {
+                anyOf {
+                    branch 'develop'
+                    branch 'main'
+                }
+            }
+            steps {
+                script {
+                    echo "=========================================="
+                    echo "🔐 Dynamic Application Security Testing with OWASP ZAP"
+                    echo "=========================================="
+                    
+                    // Wait for services to be ready
+                    sh '''
+                        echo "Waiting for services to be ready..."
+                        sleep 15
+                        
+                        # Check service availability
+                        curl -f http://localhost:3001 || echo "⚠️ Frontend not accessible"
+                        curl -f http://localhost:4001/api/health || echo "⚠️ Backend not accessible"
+                        curl -f http://localhost:3002 || echo "⚠️ Admin not accessible"
+                    '''
+                    
+                    // Run ZAP baseline scan for Frontend
+                    sh '''
+                        echo "Running ZAP baseline scan on Frontend..."
+                        docker run --rm \
+                            --network food-delivery-network \
+                            -v ${WORKSPACE}:/zap/wrk:rw \
+                            ghcr.io/zaproxy/zaproxy:stable \
+                            zap-baseline.py \
+                            -t http://frontend:80 \
+                            -r zap-frontend-report.html \
+                            -J zap-frontend-report.json \
+                            -w zap-frontend-report.md \
+                            || echo "⚠️ ZAP found some issues (exit code $?)"
+                    '''
+                    
+                    // Run ZAP baseline scan for Backend API
+                    sh '''
+                        echo "Running ZAP baseline scan on Backend API..."
+                        docker run --rm \
+                            --network food-delivery-network \
+                            -v ${WORKSPACE}:/zap/wrk:rw \
+                            ghcr.io/zaproxy/zaproxy:stable \
+                            zap-baseline.py \
+                            -t http://backend:4000 \
+                            -r zap-backend-report.html \
+                            -J zap-backend-report.json \
+                            -w zap-backend-report.md \
+                            || echo "⚠️ ZAP found some issues (exit code $?)"
+                    '''
+                    
+                    // Run ZAP baseline scan for Admin
+                    sh '''
+                        echo "Running ZAP baseline scan on Admin..."
+                        docker run --rm \
+                            --network food-delivery-network \
+                            -v ${WORKSPACE}:/zap/wrk:rw \
+                            ghcr.io/zaproxy/zaproxy:stable \
+                            zap-baseline.py \
+                            -t http://admin:80 \
+                            -r zap-admin-report.html \
+                            -J zap-admin-report.json \
+                            -w zap-admin-report.md \
+                            || echo "⚠️ ZAP found some issues (exit code $?)"
+                    '''
+                    
+                    echo "=========================================="
+                    echo "✅ DAST scanning completed"
+                    echo "Reports generated in workspace"
+                    echo "=========================================="
+                }
+            }
+            post {
+                always {
+                    // Archive ZAP reports
+                    archiveArtifacts artifacts: 'zap-*-report.*', allowEmptyArchive: true
+                    
+                    // Publish HTML reports
+                    publishHTML([
+                        reportDir: '.',
+                        reportFiles: 'zap-frontend-report.html',
+                        reportName: 'ZAP Frontend Security Report',
+                        alwaysLinkToLastBuild: true,
+                        allowMissing: true
+                    ])
+                    publishHTML([
+                        reportDir: '.',
+                        reportFiles: 'zap-backend-report.html',
+                        reportName: 'ZAP Backend Security Report',
+                        alwaysLinkToLastBuild: true,
+                        allowMissing: true
+                    ])
+                    publishHTML([
+                        reportDir: '.',
+                        reportFiles: 'zap-admin-report.html',
+                        reportName: 'ZAP Admin Security Report',
+                        alwaysLinkToLastBuild: true,
+                        allowMissing: true
+                    ])
                 }
             }
         }
