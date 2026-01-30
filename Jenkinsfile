@@ -146,10 +146,12 @@ pipeline {
                         always {
                             junit testResults: 'backend/junit.xml', allowEmptyResults: true
                             publishHTML([
+                                allowMissing: true,
+                                alwaysLinkToLastBuild: true,
+                                keepAll: true,
                                 reportDir: 'backend/coverage',
                                 reportFiles: 'index.html',
-                                reportName: 'Backend Coverage Report',
-                                alwaysLinkToLastBuild: true
+                                reportName: 'Backend Coverage Report'
                             ])
                         }
                     }
@@ -472,7 +474,8 @@ pipeline {
                         reportFiles: 'zap-frontend-report.html',
                         reportName: 'ZAP Frontend Security Report',
                         alwaysLinkToLastBuild: true,
-                        allowMissing: true
+                        allowMissing: true,
+                        keepAll: true,
                     ])
                     publishHTML([
                         reportDir: '.',
