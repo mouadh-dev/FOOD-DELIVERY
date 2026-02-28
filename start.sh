@@ -42,6 +42,49 @@ fi
 
 print_success "Docker est disponible et en cours d'exécution ✅"
 
+# Vérifier et démarrer SonarQube
+print_message "🔍 Vérification de SonarQube..."
+if docker ps --format '{{.Names}}' | grep -q '^sonarqube$'; then
+    print_success "SonarQube est déjà en cours d'exécution"
+else
+    if docker ps -a --format '{{.Names}}' | grep -q '^sonarqube$'; then
+        print_message "Démarrage de SonarQube existant..."
+        docker start sonarqube
+        print_success "SonarQube démarré"
+    else
+        print_warning "SonarQube n'est pas configuré. Exécutez ./setup-jenkins.sh pour le configurer"
+    fi
+fi
+
+# Vérifier et démarrer Jenkins
+print_message "🔧 Vérification de Jenkins..."
+if docker ps --format '{{.Names}}' | grep -q '^jenkins$'; then
+    print_success "Jenkins est déjà en cours d'exécution"
+else
+    if docker ps -a --format '{{.Names}}' | grep -q '^jenkins$'; then
+        print_message "Démarrage de Jenkins existant..."
+        docker start jenkins
+        print_success "Jenkins démarré"
+    else
+        print_warning "Jenkins n'est pas configuré. Exécutez ./setup-jenkins.sh pour le configurer"
+    fi
+fi
+
+# Vérifier et démarrer le monitoring
+print_message "📊 Vérification du monitoring..."
+if docker ps --format '{{.Names}}' | grep -q '^prometheus$'; then
+    print_success "Monitoring déjà en cours d'exécution"
+else
+    if docker ps -a --format '{{.Names}}' | grep -q '^prometheus$'; then
+        print_message "Démarrage du monitoring..."
+        docker-compose -f docker-compose.monitoring.yml start 2>/dev/null || print_warning "Monitoring non configuré"
+    else
+        print_warning "Monitoring non configuré. Exécutez ./start-monitoring.sh"
+    fi
+fi
+
+echo ""
+
 # Étape 1: Construire les images
 print_message "🔨 Étape 1: Construction des images..."
 if ./build.sh; then
@@ -75,3 +118,5 @@ print_message "🌐 URLs de l'application :"
 echo "  📱 Frontend: http://localhost:3000"
 echo "  🛠️  Admin:    http://localhost:3001"
 echo "  🔧 Backend:  http://localhost:4000"
+echo "  🔐 Jenkins:  http://localhost:8080"
+echo "  📊 SonarQube: http://localhost:9000"

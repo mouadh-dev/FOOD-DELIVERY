@@ -1,0 +1,89 @@
+# OWASP ZAP Configuration for Food Delivery Application
+# This configuration defines security scanning rules for DAST
+
+env:
+  contexts:
+    - name: "Food Delivery Application"
+      urls:
+        - "http://localhost:3000"   # Frontend
+        - "http://localhost:4000"   # Backend API
+        - "http://localhost:3001"   # Admin
+      includePaths:
+        - "http://localhost:3000/.*"
+        - "http://localhost:4000/api/.*"
+        - "http://localhost:3001/.*"
+      excludePaths:
+        - ".*logout.*"
+        - ".*delete.*"
+      authentication:
+        method: "json"
+        loginUrl: "http://localhost:4000/api/user/login"
+        loginRequestData: '{"email":"test@example.com","password":"Test123!"}'
+      users:
+        - name: "test-user"
+          credentials:
+            email: "test@example.com"
+            password: "Test123!"
+
+  parameters:
+    failOnError: true
+    failOnWarning: false
+    progressToStdout: true
+
+  vars: {}
+
+jobs:
+  - type: passiveScan-config
+    parameters:
+      maxAlertsPerRule: 10
+      scanOnlyInScope: true
+  
+  - type: spider
+    parameters:
+      url: "http://localhost:3000"
+      maxDuration: 5
+      maxDepth: 5
+      maxChildren: 10
+      acceptCookies: true
+      handleODataParametersVisited: false
+      
+  - type: spiderAjax
+    parameters:
+      url: "http://localhost:3000"
+      maxDuration: 5
+      maxCrawlDepth: 5
+      numberOfBrowsers: 2
+      browserId: "firefox-headless"
+      
+  - type: passiveScan-wait
+    parameters:
+      maxDuration: 5
+      
+  - type: activeScan
+    parameters:
+      context: "Food Delivery Application"
+      policy: "Default Policy"
+      maxRuleDurationInMins: 2
+      maxScanDurationInMins: 10
+      addQueryParam: false
+      defaultPolicy: "Default Policy"
+      delayInMs: 0
+      handleAntiCSRFTokens: true
+      injectPluginIdInHeader: false
+      scanHeadersAllRequests: true
+      threadPerHost: 2
+      
+  - type: report
+    parameters:
+      template: "traditional-html"
+      reportDir: "./zap-reports"
+      reportFile: "zap-report-{{DATETIME}}"
+      reportTitle: "Food Delivery DAST Security Report"
+      reportDescription: "Dynamic Application Security Testing Report"
+      displayReport: false
+      
+  - type: report
+    parameters:
+      template: "traditional-json"
+      reportDir: "./zap-reports"
+      reportFile: "zap-report-{{DATETIME}}.json"

@@ -3,6 +3,7 @@
 version: '3.8'
 
 services:
+
   # Backend en mode développement avec hot reload
   backend:
     # Utiliser le Dockerfile de développement
